@@ -10,8 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 
@@ -42,5 +41,32 @@ public class BookingServiceTest {
 
         assertEquals("End time must be after start time.", ex.getMessage());
         verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenRoomHasOverlappingBookingAndNotSave(){
+        //Arrange
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(1L);
+        meetingRoom.setName("Sala 1");
+
+        Booking booking = new Booking();
+        booking.setRoom(meetingRoom);
+        booking.setHostName("Raul");
+        booking.setTitle("Reunião");
+
+        LocalDateTime start = LocalDateTime.of(2026, 2, 21, 10, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 2, 21, 11, 0);
+        booking.setStartTime(start);
+        booking.setEndTime(end);
+
+        when(bookingRepository.existsOverlappingBooking(meetingRoom.getId(), start, end)).thenReturn(true);
+        //Act+Assert
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        assertEquals("Room is not available for this time slot.", ex.getMessage());
+
+        verify(bookingRepository, never()).save(any());
+
     }
 }

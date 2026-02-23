@@ -18,6 +18,15 @@ public class BookingService {
        if(booking.getEndTime().isBefore(booking.getStartTime()) || booking.getEndTime().isEqual(booking.getStartTime())){
            throw new IllegalArgumentException("End time must be after start time.");
        }
-       return bookingRepository.save(booking);
+
+        Long roomId = booking.getRoom().getId();
+
+        boolean hasConflict = bookingRepository.existsOverlappingBooking(roomId, booking.getStartTime(), booking.getEndTime());
+
+        if (hasConflict){
+            throw new RuntimeException("Room is not available for this time slot.");
+        }
+
+        return bookingRepository.save(booking);
     }
 }
