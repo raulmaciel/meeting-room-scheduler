@@ -67,6 +67,32 @@ public class BookingServiceTest {
         assertEquals("Room is not available for this time slot.", ex.getMessage());
 
         verify(bookingRepository, never()).save(any());
+    }
 
+
+    @Test
+    void shouldSaveWhenNoOverlappingExists(){
+        //Arrange
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(1L);
+        meetingRoom.setName("Sala A");
+
+        Booking booking = new Booking();
+        booking.setRoom(meetingRoom);
+        booking.setHostName("Raul");
+        booking.setTitle("Kickoff Meeting");
+
+        LocalDateTime start = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 2, 23, 11, 0);
+
+        booking.setStartTime(start);
+        booking.setEndTime(end);
+        //Act+Assert
+        when(bookingRepository.existsOverlappingBooking(meetingRoom.getId(), start, end)).thenReturn(false);
+        when(bookingRepository.save(booking)).thenReturn(booking);
+        Booking saved = bookingService.createBooking(booking);
+
+        assertNotNull(saved);
+        verify(bookingRepository, times(1)).save(booking);
     }
 }
