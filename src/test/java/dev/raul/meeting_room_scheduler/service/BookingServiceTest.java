@@ -1,5 +1,6 @@
 package dev.raul.meeting_room_scheduler.service;
 
+import dev.raul.meeting_room_scheduler.exception.RoomUnavailableException;
 import dev.raul.meeting_room_scheduler.model.Booking;
 import dev.raul.meeting_room_scheduler.model.MeetingRoom;
 import dev.raul.meeting_room_scheduler.repository.BookingRepository;
@@ -63,7 +64,7 @@ public class BookingServiceTest {
         when(bookingRepository.existsOverlappingBooking(meetingRoom.getId(), start, end)).thenReturn(true);
         //Act+Assert
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        RuntimeException ex = assertThrows(RoomUnavailableException.class, () -> bookingService.createBooking(booking));
         assertEquals("Room is not available for this time slot.", ex.getMessage());
 
         verify(bookingRepository, never()).save(any());

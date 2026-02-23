@@ -1,5 +1,6 @@
 package dev.raul.meeting_room_scheduler.service;
 
+import dev.raul.meeting_room_scheduler.exception.RoomUnavailableException;
 import dev.raul.meeting_room_scheduler.model.Booking;
 import dev.raul.meeting_room_scheduler.repository.BookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class BookingService {
         boolean hasConflict = bookingRepository.existsOverlappingBooking(roomId, booking.getStartTime(), booking.getEndTime());
 
         if (hasConflict){
-            throw new RuntimeException("Room is not available for this time slot.");
+            throw new RoomUnavailableException("Room is not available for this time slot.");
         }
 
         return bookingRepository.save(booking);
