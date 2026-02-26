@@ -9,16 +9,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/bookings")
 public class BookingController {
     private final BookingService bookingService;
 
-    @Autowired
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
     }
 
-    @PostMapping("/bookings")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Booking createBooking(@Valid @RequestBody CreateBookingRequest request){
         return bookingService.createBooking(request);

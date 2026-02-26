@@ -4,6 +4,7 @@ import dev.raul.meeting_room_scheduler.exception.RoomNotFoundException;
 import dev.raul.meeting_room_scheduler.exception.RoomUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -40,6 +41,15 @@ public class ApiExceptionHandler {
                 "status", 404,
                 "error", "Not Found",
                 "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex){
+        return ResponseEntity.badRequest().body(Map.of(
+                "status", 400,
+                "error", "Bad Request",
+                "message", "Validation Failed"
         ));
     }
 

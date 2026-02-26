@@ -1,6 +1,7 @@
 package dev.raul.meeting_room_scheduler.service;
 
 import dev.raul.meeting_room_scheduler.dto.CreateBookingRequest;
+import dev.raul.meeting_room_scheduler.exception.RoomNotFoundException;
 import dev.raul.meeting_room_scheduler.exception.RoomUnavailableException;
 import dev.raul.meeting_room_scheduler.model.Booking;
 import dev.raul.meeting_room_scheduler.model.MeetingRoom;
@@ -33,6 +34,7 @@ public class BookingServiceTest {
         //Arrange
 
         LocalDateTime start = LocalDateTime.of(2026, 2, 21, 10, 0);
+
         CreateBookingRequest request = new CreateBookingRequest(
                 1L,
                 "Raul",
@@ -117,5 +119,33 @@ public class BookingServiceTest {
         assertEquals(end, saved.getEndTime());
 
         verify(bookingRepository, times(1)).save(any(Booking.class));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenRoomNotExistsThenNotConsultOverlapAndNotSave(){
+        //Arrange
+
+        LocalDateTime start = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 2, 23, 11, 0);
+
+        CreateBookingRequest request = new CreateBookingRequest(
+                999L,
+                "Raul",
+                "Reunião",
+                null,
+                start,
+                end
+        );
+
+        when(meetingRoomRepository.findById(999L)).thenReturn(Optional.empty());
+
+        //Act + Assert
+
+        RoomNotFoundException ex = assertThrows(RoomNotFoundException.class, () -> bookingService.createBooking(request));
+        assertEquals("Meeting room not found.", ex.getMessage());
+
+        verify(meetingRoomRepository, times(1)).findById(999L);
+        verify(bookingRepository, never()).existsOverlappingBooking(any(), any(), any());
+        verify(bookingRepository, never()).save(any());
     }
 }
