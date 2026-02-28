@@ -54,6 +54,7 @@ public class ApiExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(DuplicateMeetingRoomNameException.class)
     public ResponseEntity<?> handleDuplicateRoomName(DuplicateMeetingRoomNameException ex){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "timestamp", Instant.now().toString(),

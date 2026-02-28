@@ -15,7 +15,7 @@ public class MeetingRoomService {
     }
 
     public MeetingRoom create(CreateMeetingRoomRequest request){
-        if (meetingRoomRepository.existsByNameIgnoneCase(request.name())){
+        if (meetingRoomRepository.existsByNameIgnoreCase(request.name())){
             throw new DuplicateMeetingRoomNameException("Meeting room name already exists.");
         }
 

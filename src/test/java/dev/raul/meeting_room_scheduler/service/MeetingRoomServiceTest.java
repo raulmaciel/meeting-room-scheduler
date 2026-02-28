@@ -26,7 +26,7 @@ public class MeetingRoomServiceTest {
     void shouldCreateRoomWhenNameIsUnique(){
         CreateMeetingRoomRequest request = new CreateMeetingRoomRequest("Sala 1");
 
-        when(meetingRoomRepository.existsByNameIgnoneCase("Sala 1")).thenReturn(false);
+        when(meetingRoomRepository.existsByNameIgnoreCase("Sala 1")).thenReturn(false);
         when(meetingRoomRepository.save(any(MeetingRoom.class))).thenAnswer(inv -> inv.getArgument(0));
 
         MeetingRoom created = meetingRoomService.create(request);
@@ -40,7 +40,7 @@ public class MeetingRoomServiceTest {
     void shouldThrowWhenRoomNameAlreadyExistsAndNotSave(){
         CreateMeetingRoomRequest request = new CreateMeetingRoomRequest("Sala 1");
 
-        when(meetingRoomRepository.existsByNameIgnoneCase("Sala 1")).thenReturn(true);
+        when(meetingRoomRepository.existsByNameIgnoreCase("Sala 1")).thenReturn(true);
 
         DuplicateMeetingRoomNameException ex = assertThrows(DuplicateMeetingRoomNameException.class, () -> meetingRoomService.create(request));
 
