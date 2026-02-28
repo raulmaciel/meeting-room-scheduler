@@ -6,6 +6,8 @@ import dev.raul.meeting_room_scheduler.model.MeetingRoom;
 import dev.raul.meeting_room_scheduler.repository.MeetingRoomRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class MeetingRoomService {
     private final MeetingRoomRepository meetingRoomRepository;
@@ -24,5 +26,9 @@ public class MeetingRoomService {
         meetingRoom.setAvailable(true);
 
         return meetingRoomRepository.save(meetingRoom);
+    }
+
+    public List<MeetingRoom> listAll(){
+        return meetingRoomRepository.findAll();
     }
 }

@@ -13,7 +13,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,7 +43,7 @@ public class MeetingRoomControllerTest {
 
         when(meetingRoomService.create(request)).thenReturn(created);
 
-        mockMvc.perform(post("/api/v1/room")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
@@ -51,7 +54,7 @@ public class MeetingRoomControllerTest {
     void shouldReturn400WhenNameIsBlank() throws Exception {
         CreateMeetingRoomRequest request = new CreateMeetingRoomRequest(" ");
 
-        mockMvc.perform(post("/api/v1/room")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -64,9 +67,22 @@ public class MeetingRoomControllerTest {
         when(meetingRoomService.create(request))
                 .thenThrow(new DuplicateMeetingRoomNameException("Meeting room name already exists."));
 
-        mockMvc.perform(post("/api/v1/room")
+        mockMvc.perform(post("/api/v1/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void shouldReturn200AndListRooms() throws Exception{
+        MeetingRoom r1 = new MeetingRoom();
+        r1.setId(1L);
+        r1.setName("Sala 1");
+        r1.setAvailable(true);
+
+        when(meetingRoomService.listAll()).thenReturn(List.of(r1));
+
+        mockMvc.perform(get("/api/v1/rooms"))
+                .andExpect(status().isOk());
     }
 }

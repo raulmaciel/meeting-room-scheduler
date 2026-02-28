@@ -10,6 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -46,6 +48,32 @@ public class MeetingRoomServiceTest {
 
         assertEquals("Meeting room name already exists.", ex.getMessage());
         verify(meetingRoomRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldListAllRooms(){
+        MeetingRoom r1 = new MeetingRoom();
+        r1.setId(1L);
+        r1.setName("Sala 1");
+        r1.setAvailable(true);
+
+        MeetingRoom r2 = new MeetingRoom();
+        r2.setId(2L);
+        r2.setName("Sala 2");
+        r2.setAvailable(true);
+
+        MeetingRoom r3 = new MeetingRoom();
+        r2.setId(3L);
+        r2.setName("Sala 3");
+        r2.setAvailable(true);
+
+        when(meetingRoomRepository.findAll()).thenReturn(List.of(r1,r2,r3));
+
+        List<MeetingRoom> rooms = meetingRoomService.listAll();
+
+        assertEquals(3, rooms.size());
+        verify(meetingRoomRepository, times(1)).findAll();
+
     }
 
 }
