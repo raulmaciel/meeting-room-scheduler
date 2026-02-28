@@ -1,6 +1,7 @@
 package dev.raul.meeting_room_scheduler.controller;
 
 import dev.raul.meeting_room_scheduler.dto.CreateMeetingRoomRequest;
+import dev.raul.meeting_room_scheduler.dto.UpdateMeetingRoomRequest;
 import dev.raul.meeting_room_scheduler.model.MeetingRoom;
 import dev.raul.meeting_room_scheduler.service.MeetingRoomService;
 import jakarta.validation.Valid;
@@ -28,4 +29,15 @@ public class MeetingRoomController {
     public List<MeetingRoom> list(){
         return meetingRoomService.listAll();
     }
+
+    @GetMapping("/{id}")
+    public MeetingRoom getById(@PathVariable Long id){
+        return meetingRoomService.getById(id);
+    }
+
+    @PutMapping("/{id}")
+    public MeetingRoom update(@PathVariable Long id, @Valid @RequestBody UpdateMeetingRoomRequest request){
+        return meetingRoomService.update(id, request);
+    }
+
 }
