@@ -3,8 +3,11 @@ package dev.raul.meeting_room_scheduler.service;
 import dev.raul.meeting_room_scheduler.dto.CreateMeetingRoomRequest;
 import dev.raul.meeting_room_scheduler.dto.UpdateMeetingRoomRequest;
 import dev.raul.meeting_room_scheduler.exception.DuplicateMeetingRoomNameException;
+import dev.raul.meeting_room_scheduler.exception.RoomHasActiveBookingsException;
 import dev.raul.meeting_room_scheduler.exception.RoomNotFoundException;
+import dev.raul.meeting_room_scheduler.model.BookingStatus;
 import dev.raul.meeting_room_scheduler.model.MeetingRoom;
+import dev.raul.meeting_room_scheduler.repository.BookingRepository;
 import dev.raul.meeting_room_scheduler.repository.MeetingRoomRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +26,9 @@ import static org.mockito.Mockito.*;
 public class MeetingRoomServiceTest {
     @Mock
     MeetingRoomRepository meetingRoomRepository;
+
+    @Mock
+    BookingRepository bookingRepository;
 
     @InjectMocks
     MeetingRoomService meetingRoomService;
@@ -164,5 +170,53 @@ public class MeetingRoomServiceTest {
         verify(meetingRoomRepository, times(1)).existsByNameIgnoreCaseAndIdNot("Sala 2", roomId);
         verify(meetingRoomRepository, never()).save(any());
     }
+
+    @Test
+    void shouldDeleteRoomWhenExistsAndNoActiveBookings(){
+        Long roomId = 1L;
+
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(roomId);
+        meetingRoom.setName("Sala 1");
+
+        when(meetingRoomRepository.findById(roomId)).thenReturn(Optional.of(meetingRoom));
+        when(bookingRepository.existsByRoomIdAndBookingStatus(roomId, BookingStatus.CONFIRMED)).thenReturn(false);
+
+        assertDoesNotThrow(() -> meetingRoomService.delete(roomId));
+
+        verify(meetingRoomRepository, times(1)).delete(meetingRoom);
+    }
+
+    @Test
+    void shouldThrow404WhenDeletingRoomNotFound(){
+        Long roomId = 999L;
+
+        when(meetingRoomRepository.findById(roomId)).thenReturn(Optional.empty());
+
+        assertThrows(RoomNotFoundException.class, () -> meetingRoomService.delete(roomId));
+
+        verify(bookingRepository, never()).existsByRoomIdAndBookingStatus(any(), any());
+        verify(meetingRoomRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldThrow409WhenDeletingRoomWithActiveBookings(){
+        Long roomId = 1L;
+
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(roomId);
+        meetingRoom.setName("Sala 1");
+
+        when(meetingRoomRepository.findById(roomId)).thenReturn(Optional.of(meetingRoom));
+        when(bookingRepository.existsByRoomIdAndBookingStatus(roomId, BookingStatus.CONFIRMED)).thenReturn(true);
+
+        RoomHasActiveBookingsException ex = assertThrows(RoomHasActiveBookingsException.class, () -> meetingRoomService.delete(roomId));
+
+        assertEquals("Meeting room has active bookings.", ex.getMessage());
+
+        verify(meetingRoomRepository, never()).delete(any());
+    }
+
+
 
 }

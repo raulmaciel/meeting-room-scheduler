@@ -1,6 +1,7 @@
 package dev.raul.meeting_room_scheduler.repository;
 
 import dev.raul.meeting_room_scheduler.model.Booking;
+import dev.raul.meeting_room_scheduler.model.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
+
+    boolean existsByRoomIdAndBookingStatus(Long roomId, BookingStatus bookingStatus);
 }

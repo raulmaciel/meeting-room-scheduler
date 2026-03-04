@@ -40,4 +40,10 @@ public class MeetingRoomController {
         return meetingRoomService.update(id, request);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id){
+        meetingRoomService.delete(id);
+    }
+
 }

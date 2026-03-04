@@ -3,6 +3,7 @@ package dev.raul.meeting_room_scheduler.controller;
 import dev.raul.meeting_room_scheduler.dto.CreateMeetingRoomRequest;
 import dev.raul.meeting_room_scheduler.dto.UpdateMeetingRoomRequest;
 import dev.raul.meeting_room_scheduler.exception.DuplicateMeetingRoomNameException;
+import dev.raul.meeting_room_scheduler.exception.RoomHasActiveBookingsException;
 import dev.raul.meeting_room_scheduler.exception.RoomNotFoundException;
 import dev.raul.meeting_room_scheduler.model.MeetingRoom;
 import dev.raul.meeting_room_scheduler.service.MeetingRoomService;
@@ -17,6 +18,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -160,6 +162,21 @@ public class MeetingRoomControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
 
+    }
+
+    @Test
+    void shouldReturn204WhenRoomDeleted() throws Exception{
+        mockMvc.perform(delete("/api/v1/rooms/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturn409WhenDeletingRoomWithActiveBookings() throws Exception{
+        doThrow(new RoomHasActiveBookingsException("Meeting room has active bookings."))
+                .when(meetingRoomService).delete(1L);
+
+        mockMvc.perform(delete("/api/v1/rooms/1"))
+                .andExpect(status().isConflict());
     }
 
 }

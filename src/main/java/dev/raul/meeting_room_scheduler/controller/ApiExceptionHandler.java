@@ -1,6 +1,7 @@
 package dev.raul.meeting_room_scheduler.controller;
 
 import dev.raul.meeting_room_scheduler.exception.DuplicateMeetingRoomNameException;
+import dev.raul.meeting_room_scheduler.exception.RoomHasActiveBookingsException;
 import dev.raul.meeting_room_scheduler.exception.RoomNotFoundException;
 import dev.raul.meeting_room_scheduler.exception.RoomUnavailableException;
 import org.springframework.http.HttpStatus;
@@ -56,6 +57,16 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(DuplicateMeetingRoomNameException.class)
     public ResponseEntity<?> handleDuplicateRoomName(DuplicateMeetingRoomNameException ex){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "timestamp", Instant.now().toString(),
+                "status", 409,
+                "error", "Conflict",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(RoomHasActiveBookingsException.class)
+    public ResponseEntity<?> handleDRoomHasActiveBookings(RoomHasActiveBookingsException ex){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "timestamp", Instant.now().toString(),
                 "status", 409,
