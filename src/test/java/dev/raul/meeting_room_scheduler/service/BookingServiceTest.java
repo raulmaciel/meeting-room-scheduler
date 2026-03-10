@@ -16,7 +16,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.awt.print.Book;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -147,5 +151,182 @@ public class BookingServiceTest {
         verify(meetingRoomRepository, times(1)).findById(999L);
         verify(bookingRepository, never()).existsOverlappingBooking(any(), any(), any());
         verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldListAllBookingsWhenNoFilters(){
+        //Arrange
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(1L);
+        meetingRoom.setName("Sala A");
+
+        LocalDateTime startB1 = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime endB1   = LocalDateTime.of(2026, 2, 23, 11, 0);
+
+        LocalDateTime startB2 = LocalDateTime.of(2026, 2, 23, 11, 0);
+        LocalDateTime endB2   = LocalDateTime.of(2026, 2, 23, 12, 0);
+
+        Booking b1 = new Booking();
+        b1.setId(1L);
+        b1.setRoom(meetingRoom);
+        b1.setHostName("Raul");
+        b1.setTitle("Reunião 1");
+        b1.setStartTime(startB1);
+        b1.setEndTime(endB1);
+
+        Booking b2 = new Booking();
+        b2.setId(2L);
+        b2.setRoom(meetingRoom);
+        b2.setHostName("Raul");
+        b2.setTitle("Reunião 2");
+        b2.setStartTime(startB2);
+        b2.setEndTime(endB2);
+
+        when(bookingRepository.findAll()).thenReturn(List.of(b1,b2));
+
+        // Act
+
+        List<Booking> bookings = bookingService.listBookings(null, null);
+
+        //Assert
+        assertEquals(2, bookings.size());
+        verify(bookingRepository, times(1)).findAll();
+        verify(bookingRepository,never()).findByRoomId(anyLong());
+    }
+
+    @Test
+    void shouldListBookingsWhenFilteringByRoomId(){
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(1L);
+        meetingRoom.setName("Sala A");
+
+        Long id = 1L;
+
+        LocalDateTime startB1 = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime endB1   = LocalDateTime.of(2026, 2, 23, 11, 0);
+        LocalDateTime startB2 = LocalDateTime.of(2026, 2, 23, 11, 0);
+        LocalDateTime endB2   = LocalDateTime.of(2026, 2, 23, 12, 0);
+
+
+        Booking b1 = new Booking();
+        b1.setId(1L);
+        b1.setRoom(meetingRoom);
+        b1.setHostName("Raul");
+        b1.setTitle("Reunião 1");
+        b1.setStartTime(startB1);
+        b1.setEndTime(endB1);
+
+        Booking b2 = new Booking();
+        b2.setId(2L);
+        b2.setRoom(meetingRoom);
+        b2.setHostName("Raul");
+        b2.setTitle("Reunião 2");
+        b2.setStartTime(startB2);
+        b2.setEndTime(endB2);
+
+        when(bookingRepository.findByRoomId(1L)).thenReturn(List.of(b1, b2));
+
+        List<Booking> bookingsFound = bookingService.listBookings(id, null);
+
+        assertNotNull(bookingsFound);
+        assertEquals(2, bookingsFound.size());
+        assertEquals(1L, bookingsFound.get(0).getId());
+        assertEquals(2L, bookingsFound.get(1).getId());
+
+        verify(bookingRepository, times(1)).findByRoomId(1L);
+        verify(bookingRepository, never()).findAll();
+    }
+
+    @Test
+    void shouldListBookingsWhenFilteringByDate(){
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(1L);
+        meetingRoom.setName("Sala A");
+
+        LocalDateTime startB1 = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime endB1   = LocalDateTime.of(2026, 2, 23, 11, 0);
+        LocalDateTime startB2 = LocalDateTime.of(2026, 2, 23, 11, 0);
+        LocalDateTime endB2   = LocalDateTime.of(2026, 2, 23, 12, 0);
+
+
+        Booking b1 = new Booking();
+        b1.setId(1L);
+        b1.setRoom(meetingRoom);
+        b1.setHostName("Raul");
+        b1.setTitle("Reunião 1");
+        b1.setStartTime(startB1);
+        b1.setEndTime(endB1);
+
+        Booking b2 = new Booking();
+        b2.setId(2L);
+        b2.setRoom(meetingRoom);
+        b2.setHostName("Raul");
+        b2.setTitle("Reunião 2");
+        b2.setStartTime(startB2);
+        b2.setEndTime(endB2);
+
+        LocalDate date = LocalDate.of(2026, 2, 23);
+
+        LocalDateTime dayStart = date.atStartOfDay();
+        LocalDateTime dayEnd = date.atTime(23,59,59, 999);
+
+        when(bookingRepository.findByStartTimeBetween(dayStart, dayEnd)).thenReturn(List.of(b1,b2));
+
+        List<Booking> bookingsFound = bookingService.listBookings(null, date);
+
+        assertNotNull(bookingsFound);
+        assertEquals(2, bookingsFound.size());
+        assertEquals(1L, bookingsFound.get(0).getId());
+        assertEquals(2L, bookingsFound.get(1).getId());
+
+        verify(bookingRepository, times(1)).findByStartTimeBetween(dayStart, dayEnd);
+        verify(bookingRepository, never()).findAll();
+    }
+
+    @Test
+    void shouldListBookingsWhenFilteringByRoomIdAndDate(){
+        Long roomId = 1L;
+
+        MeetingRoom meetingRoom = new MeetingRoom();
+        meetingRoom.setId(roomId);
+        meetingRoom.setName("Sala A");
+
+        LocalDateTime startB1 = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime endB1   = LocalDateTime.of(2026, 2, 23, 11, 0);
+        LocalDateTime startB2 = LocalDateTime.of(2026, 2, 23, 11, 0);
+        LocalDateTime endB2   = LocalDateTime.of(2026, 2, 23, 12, 0);
+
+
+        Booking b1 = new Booking();
+        b1.setId(1L);
+        b1.setRoom(meetingRoom);
+        b1.setHostName("Raul");
+        b1.setTitle("Reunião 1");
+        b1.setStartTime(startB1);
+        b1.setEndTime(endB1);
+
+        Booking b2 = new Booking();
+        b2.setId(2L);
+        b2.setRoom(meetingRoom);
+        b2.setHostName("Raul");
+        b2.setTitle("Reunião 2");
+        b2.setStartTime(startB2);
+        b2.setEndTime(endB2);
+
+        LocalDate date = LocalDate.of(2026, 2, 23);
+
+        LocalDateTime dayStart = date.atStartOfDay();
+        LocalDateTime dayEnd = date.atTime(23,59,59, 999);
+
+        when(bookingRepository.findByRoomIdAndStartTimeBetween(roomId, dayStart, dayEnd)).thenReturn(List.of(b1,b2));
+
+        List<Booking> bookingsFound = bookingService.listBookings(roomId, date);
+
+        assertEquals(2, bookingsFound.size());
+        assertEquals(1L, bookingsFound.get(0).getId());
+        assertEquals(2L, bookingsFound.get(1).getId());
+
+        verify(bookingRepository, times(1)).findByRoomIdAndStartTimeBetween(roomId, dayStart, dayEnd);
+        verify(bookingRepository, never()).findAll();
     }
 }

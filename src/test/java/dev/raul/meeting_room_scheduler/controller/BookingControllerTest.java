@@ -16,9 +16,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,7 +38,7 @@ public class BookingControllerTest {
     BookingService bookingService;
 
     @Test
-    void shouldReturn201WhenBookingCreated() throws Exception{
+    void shouldReturn201WhenBookingCreated() throws Exception {
         LocalDateTime start = LocalDateTime.of(2026, 2, 23, 10, 0);
         LocalDateTime end = LocalDateTime.of(2026, 2, 23, 11, 0);
 
@@ -55,8 +58,8 @@ public class BookingControllerTest {
         when(bookingService.createBooking(request)).thenReturn(saved);
 
         mockMvc.perform(post("/api/v1/bookings")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated());
 
     }
@@ -90,8 +93,56 @@ public class BookingControllerTest {
         when(bookingService.createBooking(request)).thenThrow(new RoomUnavailableException("Room is not available for this time slot."));
 
         mockMvc.perform(post("/api/v1/bookings")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
     }
+
+    @Test
+    void shouldReturn200WhenNoFiltering() throws Exception {
+
+        LocalDateTime startB1 = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime endB1   = LocalDateTime.of(2026, 2, 23, 11, 0);
+
+        MeetingRoom room = new MeetingRoom();
+
+        Booking b1 = new Booking();
+        b1.setId(1L);
+        b1.setRoom(room);
+        b1.setHostName("Raul");
+        b1.setTitle("Reunião 1");
+        b1.setStartTime(startB1);
+        b1.setEndTime(endB1);
+
+        when(bookingService.listBookings(null, null)).thenReturn(List.of(b1));
+
+        mockMvc.perform(get("/api/v1/bookings")).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturn200WhenFiltering() throws Exception {
+
+        LocalDate date = LocalDate.of(2026,2,23);
+
+        LocalDateTime startB1 = LocalDateTime.of(2026, 2, 23, 10, 0);
+        LocalDateTime endB1   = LocalDateTime.of(2026, 2, 23, 11, 0);
+
+        MeetingRoom room = new MeetingRoom();
+
+        Booking b1 = new Booking();
+        b1.setId(1L);
+        b1.setRoom(room);
+        b1.setHostName("Raul");
+        b1.setTitle("Reunião 1");
+        b1.setStartTime(startB1);
+        b1.setEndTime(endB1);
+
+        when(bookingService.listBookings(1L, date)).thenReturn(List.of(b1));
+
+        mockMvc.perform(get("/api/v1/bookings")
+                        .param("roomId" , "1")
+                        .param("date", "2026-02-23"))
+                .andExpect(status().isOk());
+    }
+
 }

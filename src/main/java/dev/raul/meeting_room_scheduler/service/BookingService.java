@@ -11,6 +11,10 @@ import dev.raul.meeting_room_scheduler.repository.MeetingRoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 public class BookingService {
     private final BookingRepository bookingRepository;
@@ -45,5 +49,25 @@ public class BookingService {
         booking.setBookingStatus(BookingStatus.CONFIRMED);
 
         return bookingRepository.save(booking);
+    }
+
+    public List<Booking> listBookings(Long id, LocalDate date){
+        if (id == null && date == null){
+            return bookingRepository.findAll();
+        }
+        if (id != null && date == null){
+            return bookingRepository.findByRoomId(id);
+        }
+        if (id == null){
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.atTime(23,59,59,999);
+            return bookingRepository.findByStartTimeBetween(start, end);
+        }
+
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(23,59,59,999);
+
+
+        return bookingRepository.findByRoomIdAndStartTimeBetween(id, start, end);
     }
 }
